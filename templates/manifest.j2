@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ name }}
+  labels:
+    name: {{ name }}
+    env: {{ env }}
+spec:
+  replicas: {{ replicas | default(1)  }}
+  selector:
+    matchLabels:
+      name: {{ name }}
+      env: {{ env }}
+  template:
+      annotations:
+      labels:
+        name: {{ name }}
+        env: {{ env }}
+    spec:
+      serviceAccountName: {{ account | default('default') }}
+      containers:
+        - name: {{ name }}
+          image: {{ image.repo }}:{{ image.tag }}
+          imagePullPolicy: {{ image.pullpolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ name }}-svc
+
+  labels:
+    name: {{ name }}
+    env: {{ env }}
+spec:
+  type: {{ service.type }}
+  ports:
+    - port: {{ service.port }}
+      targetPort: 443
+      protocol: TCP
+  selector:
+    name: {{ name }}
+    env: {{ env }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ name }}-pv
+  labels:
+    name: {{ name }}
+    env: {{ env }}
+spec:
+  capacity:
+    storage: {{ pv.size | default('10Gi') }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain

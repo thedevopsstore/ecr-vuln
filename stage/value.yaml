@@ -1,0 +1,15 @@
+---
+
+services:
+
+- name: webapp
+  env: stage
+  service:
+    type: NodePort
+    port: 443
+  image:
+    repo: dsg.infra
+    tag: latest
+    pullpolicy: always
+  pv:
+
